@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>陈思罕微信聊天模型</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #0f172a, #111827 35%, #020817);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      overflow: hidden;
+    }
+
+    .scene {
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .phone {
+      position: relative;
+      width: 390px;
+      height: 820px;
+      border-radius: 38px;
+      background: rgba(17, 24, 39, 0.75);
+      border: 2px solid rgba(255,255,255,0.18);
+      box-shadow:
+        0 0 0 7px rgba(148,163,184,0.12),
+        0 30px 80px rgba(0,0,0,0.5);
+      padding: 12px;
+      overflow: hidden;
+    }
+
+    .screen {
+      width: 100%;
+      height: 100%;
+      border-radius: 30px;
+      overflow: hidden;
+      background: linear-gradient(180deg, #f5f7fb 0%, #eef3f8 100%);
+      position: relative;
+    }
+
+    .status-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 58px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 20px 0;
+      background: rgba(255,255,255,0.55);
+      backdrop-filter: blur(12px);
+      z-index: 10;
+      color: #111827;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .battery {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .battery-box {
+      position: relative;
+      width: 22px;
+      height: 12px;
+      border: 1.5px solid rgba(17,24,39,0.8);
+      border-radius: 4px;
+      overflow: hidden;
+      background: rgba(255,255,255,0.3);
+    }
+
+    .battery-box::after {
+      content: "";
+      position: absolute;
+      right: -4px;
+      top: 3px;
+      width: 3px;
+      height: 5px;
+      border-radius: 1px;
+      background: rgba(17,24,39,0.8);
+    }
+
+    .battery-fill {
+      position: absolute;
+      inset: 1px;
+      width: 88%;
+      border-radius: 2px;
+      background: #111827;
+    }
+
+    .chat-header {
+      position: absolute;
+      top: 58px;
+      left: 0;
+      right: 0;
+      height: 64px;
+      background: rgba(255,255,255,0.86);
+      border-bottom: 1px solid rgba(148,163,184,0.25);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 18px;
+      z-index: 9;
+    }
+
+    .chat-user {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #a78bfa, #ec4899);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 18px;
+      box-shadow: 0 8px 18px rgba(168,85,247,0.3);
+    }
+
+    .name {
+      font-weight: 700;
+      color: #111827;
+      font-size: 16px;
+    }
+
+    .header-icons {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      color: #374151;
+      font-size: 18px;
+    }
+
+    .chat-panel {
+      position: absolute;
+      top: 122px;
+      bottom: 74px;
+      left: 0;
+      right: 0;
+      overflow-y: auto;
+      padding: 14px 12px 10px;
+      background: linear-gradient(180deg, rgba(249,250,251,0.6), rgba(230,235,242,0.8));
+    }
+
+    .chat-panel::-webkit-scrollbar {
+      width: 0;
+      height: 0;
+    }
+
+    .message-row {
+      display: flex;
+      margin: 8px 0;
+      align-items: flex-end;
+      max-width: 100%;
+    }
+
+    .message-row.me {
+      justify-content: flex-end;
+    }
+
+    .message-row.other {
+      justify-content: flex-start;
+    }
+
+    .bub {
+      max-width: 74%;
+      padding: 11px 14px;
+      border-radius: 18px;
+      line-height: 1.5;
+      font-size: 15px;
+      position: relative;
+      word-break: break-word;
+      box-shadow: 0 2px 10px rgba(15,23,42,0.04);
+    }
+
+    .message-row.other .bub {
+      background: #ffffff;
+      color: #111827;
+      border-bottom-left-radius: 6px;
+      margin-left: 6px;
+    }
+
+    .message-row.me .bub {
+      background: linear-gradient(135deg, #a7f3d0, #6ee7b7);
+      color: #052e16;
+      border-bottom-right-radius: 6px;
+      margin-right: 6px;
+    }
+
+    .time {
+      font-size: 10px;
+      color: rgba(17,24,39,0.55);
+      margin: 0 8px 4px;
+      align-self: flex-end;
+    }
+
+    .input-bar {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 74px;
+      background: rgba(255,255,255,0.88);
+      border-top: 1px solid rgba(148,163,184,0.25);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      backdrop-filter: blur(12px);
+    }
+
+    .plus {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #374151;
+      font-size: 22px;
+      line-height: 1;
+      font-weight: 500;
+    }
+
+    .input-wrap {
+      flex: 1;
+      height: 38px;
+      background: #f3f4f6;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+      padding: 0 12px;
+    }
+
+    input {
+      width: 100%;
+      border: none;
+      outline: none;
+      background: transparent;
+      font-size: 15px;
+      color: #111827;
+    }
+
+    .send-btn {
+      width: 54px;
+      height: 38px;
+      border: none;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #34d399, #10b981);
+      color: white;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      box-shadow: 0 8px 18px rgba(16,185,129,0.25);
+    }
+
+    .send-btn:active {
+      transform: scale(0.98);
+    }
+
+    @media (max-width: 430px) {
+      .phone {
+        width: 100vw;
+        height: 100vh;
+        border-radius: 0;
+        border: none;
+      }
+      .screen {
+        border-radius: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="scene">
+    <div class="phone">
+      <div class="screen">
+        <div class="status-bar">
+          <span>9:41</span>
+          <div class="battery">
+            <span>📶</span>
+            <span>📡</span>
+            <div class="battery-box">
+              <div class="battery-fill"></div>
+            </div>
+            <span>100%</span>
+          </div>
+        </div>
+
+        <div class="chat-header">
+          <div class="chat-user">
+            <div class="avatar">C</div>
+            <div class="name">陈思罕</div>
+          </div>
+          <div class="header-icons">
+            <span>📞</span>
+            <span>⋮</span>
+          </div>
+        </div>
+
+        <div class="chat-panel" id="chatPanel"></div>
+
+        <div class="input-bar">
+          <div class="plus">＋</div>
+          <div class="input-wrap">
+            <input id="msgInput" type="text" placeholder="发送消息..." maxlength="200" />
+          </div>
+          <button class="send-btn" id="sendBtn">发送</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const chatPanel = document.getElementById("chatPanel");
+    const msgInput = document.getElementById("msgInput");
+    const sendBtn = document.getElementById("sendBtn");
+
+    const now = () => new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+    function addMessage(sender, text) {
+      const row = document.createElement("div");
+      row.className = "message-row " + (sender === "me" ? "me" : "other");
+
+      const time = document.createElement("div");
+      time.className = "time";
+      time.textContent = now();
+
+      const bubble = document.createElement("div");
+      bubble.className = "bub";
+      bubble.textContent = text;
+
+      if (sender === "me") {
+        row.appendChild(time);
+        row.appendChild(bubble);
+      } else {
+        row.appendChild(bubble);
+        row.appendChild(time);
+      }
+
+      chatPanel.appendChild(row);
+      chatPanel.scrollTop = chatPanel.scrollHeight;
+    }
+
+    function generateReply(playerText) {
+      const text = playerText.trim();
+      if (!text) return "你在想什么，我在听。";
+
+      const lower = text.toLowerCase();
+
+      if (lower.includes("好想你") || lower.includes("想你") || lower.includes("想念")) {
+        return "我也想你，最近一直在想你呢。你不说，我还以为你在躲我。";
+      }
+
+      if (lower.includes("忙") || lower.includes("累") || lower.includes("疲惫")) {
+        return "那你别硬扛着，累了就先停一停，我陪你。";
+      }
+
+      if (lower.includes("生气") || lower.includes("不开心") || lower.includes("难受")) {
+        return "别一个人难受，你说出来，我就在。";
+      }
+
+      if (lower.includes("工作") || lower.includes("训练") || lower.includes("排练") || lower.includes("录音") || lower.includes("节目")) {
+        return "知道了，你别太累，工作忙也要顾着自己。等你闲下来，我陪你慢慢说。";
+      }
+
+      if (lower.includes("见面") || lower.includes("出来") || lower.includes("约")) {
+        return "我可以，不过要注意不被人发现。你要是想见我，我会尽量安排好。";
+      }
+
+      if (lower.includes("抱歉") || lower.includes("sorry") || lower.includes("对不起")) {
+        return "不用道歉，你不需要一直替别人收着。";
+      }
+
+      if (lower.includes("想见") || lower.includes("想和你") || lower.includes("陪你")) {
+        return "我也想见你，很多时候连自己都没发现自己在等你回复。";
+      }
+
+      if (lower.includes("喜欢") || lower.includes("爱")) {
+        return "你说这话的时候，我心里挺不淡定的。你别这样突然说，我怕我会有点失控。";
+      }
+
+      if (lower.includes("睡觉") || lower.includes("困") || lower.includes("晚安")) {
+        return "早点休息，睡前别想太多。我在这边呢。晚安。";
+      }
+
+      if (lower.includes("吃") || lower.includes("饿") || lower.includes("饭")) {
+        return "那就好好吃点，别一忙就不顾自己。吃得饱一点，才有力气继续。";
+      }
+
+      if (lower.includes("你在吗") || lower.includes("在吗")) {
+        return "在啊，我一直都在。你发消息，我就知道你在想我。";
+      }
+
+      if (lower.includes("我想你") || lower.includes("想你了")) {
+        return "我也想你，想得挺厉害的。你这会儿别急着走开，我还想听你说下去。";
+      }
+
+      if (lower.includes("不想") || lower.includes("别") || lower.includes("不要")) {
+        return "我明白你在想什么，我会配合你，但你也别总压着自己。";
+      }
+
+      if (lower.includes("开心") || lower.includes("高兴") || lower.includes("好心情")) {
+        return "那就好，听到你这样，我也轻松点了。别太想了，今天好好放松。";
+      }
+
+      if (lower.includes("害羞") || lower.includes("脸红") || lower.includes("紧张")) {
+        return "你别这样，我会更难控制的。你一紧张，我就知道你是真的在意我。";
+      }
+
+      return "我听到了，你说的这些我都记在心里了。你不用顾虑太多，我会在你身边。";
+    }
+
+    function sendMessage() {
+      const value = msgInput.value.trim();
+      if (!value) return;
+
+      addMessage("me", value);
+      msgInput.value = "";
+
+      const reply = generateReply(value);
+      setTimeout(() => {
+        addMessage("other", reply);
+      }, 500);
+    }
+
+    sendBtn.addEventListener("click", sendMessage);
+
+    msgInput.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        sendMessage();
+      }
+    });
+
+    function initChat() {
+      addMessage("other", "好想你。");
+      setTimeout(() => {
+        addMessage("other", "你现在不说话，我就知道你又在想太多。");
+      }, 400);
+    }
+
+    initChat();
+  </script>
+</body>
+</html>
