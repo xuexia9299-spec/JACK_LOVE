@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>秘密恋爱模拟器</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: linear-gradient(135deg, #09111d 0%, #111827 32%, #020817 100%);
+      color: #e5e7eb;
+    }
+
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .app {
+      width: 1220px;
+      max-width: 96vw;
+      height: 840px;
+      max-height: 92vh;
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      border-radius: 26px;
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 330px 1fr;
+      box-shadow:
+        0 30px 80px rgba(0,0,0,0.38),
+        0 0 0 1px rgba(255,255,255,0.04);
+    }
+
+    .left-panel {
+      background: linear-gradient(180deg, rgba(17,24,39,0.96), rgba(15,23,42,0.92));
+      border-right: 1px solid rgba(148,163,184,0.15);
+      padding: 20px 18px 16px;
+    }
+
+    .section-title {
+      margin: 0 0 12px;
+      font-size: 11px;
+      letter-spacing: 2px;
+      color: #7dd3fc;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .identity-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .identity-item {
+      width: 100%;
+      background: rgba(148,163,184,0.06);
+      border: 1px solid rgba(148,163,184,0.14);
+      border-radius: 14px;
+      color: #e5e7eb;
+      padding: 12px 14px;
+      text-align: left;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .identity-item:hover,
+    .identity-item.active {
+      background: rgba(59,130,246,0.15);
+      border-color: rgba(96,165,250,0.5);
+      transform: translateX(2px);
+    }
+
+    .avatar-box {
+      background: rgba(148,163,184,0.08);
+      border: 1px solid rgba(148,163,184,0.15);
+      border-radius: 18px;
+      padding: 16px 14px;
+      margin-bottom: 18px;
+    }
+
+    .avatar-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .avatar {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #a78bfa, #ec4899);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 20px;
+      box-shadow: 0 12px 24px rgba(168,85,247,0.22);
+    }
+
+    .player-name {
+      font-weight: 700;
+      font-size: 18px;
+      color: #f8fafc;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      border: 1px solid rgba(148,163,184,0.15);
+      background: rgba(15,23,42,0.9);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 14px;
+      color: #f3f4f6;
+      outline: none;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .stat-card {
+      background: rgba(148,163,184,0.07);
+      border: 1px solid rgba(148,163,184,0.15);
+      border-radius: 14px;
+      padding: 10px 12px;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: #cbd5e1;
+      margin-bottom: 6px;
+      letter-spacing: 0.8px;
+    }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: 800;
+      color: #f8fafc;
+    }
+
+    .right-panel {
+      display: grid;
+      grid-template-rows: 110px 1fr 170px;
+      background: linear-gradient(180deg, rgba(248,250,252,0.96), rgba(226,232,240,0.98));
+      color: #111827;
+    }
+
+    .topbar {
+      background: rgba(255,255,255,0.62);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(148,163,184,0.24);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 22px;
+    }
+
+    .user-box {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .user-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #a78bfa, #ec4899);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 18px;
+      box-shadow: 0 10px 18px rgba(168,85,247,0.2);
+    }
+
+    .user-name {
+      font-weight: 800;
+      font-size: 18px;
+    }
+
+    .risk-badge {
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid rgba(34,197,94,0.4);
+      background: rgba(34,197,94,0.12);
+      color: #166534;
+    }
+
+    .chat-area {
+      display: grid;
+      grid-template-columns: 1.6fr 0.9fr;
+      min-height: 0;
+    }
+
+    .chat-box {
+      border-right: 1px solid rgba(148,163,184,0.2);
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .chat-header {
+      background: rgba(255,255,255,0.62);
+      border-bottom: 1px solid rgba(148,163,184,0.2);
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .chat-title {
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .chat-status {
+      font-size: 12px;
+      color: #4b5563;
+      font-weight: 600;
+    }
+
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      background: linear-gradient(180deg, rgba(247,250,252,0.7), rgba(226,232,240,0.7));
+      padding: 16px 16px 20px;
+    }
+
+    .messages::-webkit-scrollbar {
+      width: 0;
+      height: 0;
+    }
+
+    .msg-row {
+      display: flex;
+      margin: 10px 0;
+      align-items: flex-end;
+    }
+
+    .msg-row.me {
+      justify-content: flex-end;
+    }
+
+    .msg-row.other {
+      justify-content: flex-start;
+    }
+
+    .bubble {
+      max-width: 72%;
+      padding: 12px 14px;
+      border-radius: 18px;
+      line-height: 1.55;
+      font-size: 15px;
+      box-shadow: 0 4px 12px rgba(15,23,42,0.05);
+      word-break: break-word;
+    }
+
+    .msg-row.other .bubble {
+      background: #ffffff;
+      color: #111827;
+      border-bottom-left-radius: 8px;
+    }
+
+    .msg-row.me .bubble {
+      background: linear-gradient(135deg, #bbf7d0, #6ee7b7);
+      color: #052e16;
+      border-bottom-right-radius: 8px;
+    }
+
+    .time {
+      font-size: 10px;
+      color: #6b7280;
+      margin: 0 8px 5px;
+    }
+
+    .input-area {
+      display: flex;
+      gap: 10px;
+      padding: 12px 14px 16px;
+      background: rgba(255,255,255,0.68);
+      border-top: 1px solid rgba(148,163,184,0.2);
+    }
+
+    .input-area input {
+      flex: 1;
+      border: none;
+      outline: none;
+      background: #f3f4f6;
+      border-radius: 16px;
+      padding: 12px 14px;
+      font-size: 15px;
+      color: #111827;
+    }
+
+    .send-btn {
+      background: linear-gradient(135deg, #34d399, #10b981);
+      color: white;
+      border: none;
+      border-radius: 16px;
+      min-width: 84px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 12px 24px rgba(16,185,129,0.22);
+    }
+
+    .send-btn:active {
+      transform: scale(0.98);
+    }
+
+    .side-panel {
+      padding: 16px 16px 8px;
+      background: rgba(255,255,255,0.35);
+      overflow: auto;
+    }
+
+    .mini-card {
+      background: rgba(255,255,255,0.56);
+      border: 1px solid rgba(148,163,184,0.2);
+      border-radius: 16px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+
+    .mini-card h4 {
+      margin: 0 0 10px;
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      color: #475569;
+      text-transform: uppercase;
+      font-weight: 800;
+    }
+
+    .work-title {
+      font-size: 18px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      color: #111827;
+    }
+
+    .work-meta {
+      line-height: 1.6;
+      color: #475569;
+      font-size: 13px;
+    }
+
+    .event-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .event-btn {
+      width: 100%;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #dbeafe, #e0f2fe);
+      color: #0f172a;
+      font-weight: 700;
+      padding: 10px 12px;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .bottom-status {
+      padding: 16px 18px 18px;
+      background: rgba(255,255,255,0.52);
+      border-top: 1px solid rgba(148,163,184,0.2);
+    }
+
+    .bottom-status .label {
+      font-size: 11px;
+      letter-spacing: 1.8px;
+      text-transform: uppercase;
+      color: #475569;
+      margin-bottom: 8px;
+      font-weight: 800;
+    }
+
+    .story-note {
+      line-height: 1.75;
+      color: #1f2937;
+      font-size: 14px;
+    }
+
+    @media (max-width: 1024px) {
+      .app {
+        width: 100vw;
+        max-width: 100vw;
+        height: 100vh;
+        max-height: 100vh;
+        border-radius: 0;
+      }
+      .left-panel {
+        min-width: 0;
+      }
+    }
+
+    @media (max-width: 780px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+      .left-panel {
+        border-right: none;
+        border-bottom: 1px solid rgba(148,163,184,0.15);
+      }
+      .right-panel {
+        grid-template-rows: 100px 1fr 150px;
+      }
+      .chat-area {
+        grid-template-columns: 1fr;
+      }
+      .side-panel {
+        border-top: 1px solid rgba(148,163,184,0.2);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="left-panel">
+      <p class="section-title">身份选择</p>
+      <div class="identity-list" id="identityList"></div>
+
+      <div class="avatar-box">
+        <div class="avatar-row">
+          <div class="avatar" id="avatar">G</div>
+          <div class="player-name" id="playerName">姐姐</div>
+        </div>
+        <input id="playerInput" type="text" value="姐姐" />
+      </div>
+
+      <p class="section-title">关系状态</p>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">亲密度</div>
+          <div class="stat-value" id="affectionVal">62</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">信任值</div>
+          <div class="stat-value" id="trustVal">68</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">隐秘度</div>
+          <div class="stat-value" id="secrecyVal">78</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">风险值</div>
+          <div class="stat-value" id="riskVal">24</div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="right-panel">
+      <div class="topbar">
+        <div class="user-box">
+          <div class="user-avatar">C</div>
+          <div class="user-name">陈思罕</div>
+        </div>
+        <div class="risk-badge" id="riskBadge">风险：低</div>
+      </div>
+
+      <div class="chat-area">
+        <section class="chat-box">
+          <div class="chat-header">
+            <div class="chat-title">私聊</div>
+            <div class="chat-status">已加密</div>
+          </div>
+          <div class="messages" id="messages"></div>
+          <div class="input-area">
+            <input id="msgInput" type="text" placeholder="随便说点什么..." maxlength="200" />
+            <button class="send-btn" id="sendBtn">发送</button>
+          </div>
+        </section>
+
+        <aside class="side-panel">
+          <div class="mini-card">
+            <h4>工作事件</h4>
+            <div class="work-title" id="workTitle">训练室</div>
+            <div class="work-meta" id="workMeta">训练结束后，他悄悄发来消息：“你今天还在吗？”</div>
+            <div class="event-list" id="eventList"></div>
+          </div>
+
+          <div class="mini-card">
+            <h4>队友观察</h4>
+            <div class="work-meta" id="teamAwareness">队友还没完全察觉，保持低调。</div>
+          </div>
+        </aside>
+      </div>
+
+      <div class="bottom-status">
+        <div class="label">实时状态</div>
+        <div class="story-note" id="storyNote">
+          你作为某位队友的姐姐，在和陈思罕的秘密关系里还处于试探阶段。你需要低调而克制地维持联系，不让任何人察觉异常。
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const identities = [
+      { name: "张桂源的姐姐", initial: "G" },
+      { name: "张函瑞的姐姐", initial: "R" },
+      { name: "左奇函的姐姐", initial: "Q" },
+      { name: "陈奕恒的姐姐", initial: "E" },
+      { name: "陈浚铭的姐姐", initial: "M" }
+    ];
+
+    const stats = {
+      affection: 62,
+      trust: 68,
+      secrecy: 78,
+      risk: 24,
+      teamAwareness: 18
+    };
+
+    const workEvents = [
+      {
+        title: "训练室",
+        meta: "训练结束后，他悄悄发来消息：‘你今天还在吗？’",
+        note: "训练结束后，你和陈思罕的互动更密切了一点。危险还在可控范围，但他更在意你了。"
+      },
+      {
+        title: "新歌录制",
+        meta: "录音间里只有一点点零碎声音，气氛安静得过分。",
+        note: "他清楚地注意到了你，语气比平时更温柔。"
+      },
+      {
+        title: "综艺录制",
+        meta: "节目现场一切都忙碌，只有你和他之间没有明确台词。",
+        note: "现场环境逼得他压低情绪，但眼神里依然有一丝不安。"
+      },
+      {
+        title: "演唱会排练",
+        meta: "站在舞台边缘，灯光忽明忽暗，像是给了你们两个隐秘的空间。",
+        note: "风险正在抬头，但你与陈思罕的联系比以前更稳定。"
+      },
+      {
+        title: "后台休息",
+        meta: "他在休息区坐着，看起来没什么事，但总会盯着你一眼。",
+        note: "有些关系，不用说出口也能让人感知到。"
+      }
+    ];
+
+    let currentIdentity = identities[0];
+    let currentEventIndex = 0;
+
+    const identityListEl = document.getElementById("identityList");
+    const avatarEl = document.getElementById("avatar");
+    const playerNameEl = document.getElementById("playerName");
+    const playerInputEl = document.getElementById("playerInput");
+    const riskBadgeEl = document.getElementById("riskBadge");
+    const messagesEl = document.getElementById("messages");
+    const msgInputEl = document.getElementById("msgInput");
+    const sendBtn = document.getElementById("sendBtn");
+    const workTitleEl = document.getElementById("workTitle");
+    const workMetaEl = document.getElementById("workMeta");
+    const eventListEl = document.getElementById("eventList");
+    const teamAwarenessEl = document.getElementById("teamAwareness");
+    const storyNoteEl = document.getElementById("storyNote");
+
+    function buildIdentityList() {
+      identityListEl.innerHTML = "";
+      identities.forEach((item, index) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "identity-item" + (index === 0 ? " active" : "");
+        btn.textContent = item.name;
+        btn.addEventListener("click", () => {
+          currentIdentity = item;
+          document.querySelectorAll(".identity-item").forEach(node => node.classList.remove("active"));
+          btn.classList.add("active");
+          applyIdentity();
+        });
+        identityListEl.appendChild(btn);
+      });
+    }
+
+    function applyIdentity() {
+      const name = playerInputEl.value.trim() || "姐姐";
+      playerNameEl.textContent = name;
+      avatarEl.textContent = currentIdentity.initial;
+      storyNoteEl.textContent =
+        `你现在作为“${currentIdentity.name}”，在团体工作场景中随时可能被人看见。你和陈思罕的关系仍然是低调试探，不能被粉丝、狗仔或队友过度察觉。`;
+    }
+
+    function updateStats() {
+      document.getElementById("affectionVal").textContent = stats.affection;
+      document.getElementById("trustVal").textContent = stats.trust;
+      document.getElementById("secrecyVal").textContent = stats.secrecy;
+      document.getElementById("riskVal").textContent = stats.risk;
+
+      if (stats.risk < 30) {
+        riskBadgeEl.textContent = "风险：低";
+        riskBadgeEl.style.background = "rgba(34,197,94,0.12)";
+        riskBadgeEl.style.borderColor = "rgba(34,197,94,0.4)";
+        riskBadgeEl.style.color = "#166534";
+      } else if (stats.risk < 60) {
+        riskBadgeEl.textContent = "风险：中";
+        riskBadgeEl.style.background = "rgba(251,146,60,0.12)";
+        riskBadgeEl.style.borderColor = "rgba(251,146,60,0.4)";
+        riskBadgeEl.style.color = "#c2410c";
+      } else {
+        riskBadgeEl.textContent = "风险：高";
+        riskBadgeEl.style.background = "rgba(239,68,68,0.12)";
+        riskBadgeEl.style.borderColor = "rgba(239,68,68,0.4)";
+        riskBadgeEl.style.color = "#991b1b";
+      }
+
+      if (stats.teamAwareness < 35) {
+        teamAwarenessEl.textContent = "队友还没完全察觉，保持低调。";
+      } else if (stats.teamAwareness < 70) {
+        teamAwarenessEl.textContent = "有些队友开始察觉到你们的氛围，必须小心。";
+      } else {
+        teamAwarenessEl.textContent = "风险正在逼近，必须谨慎控制公开互动。";
+      }
+    }
+
+    function addMessage(sender, text) {
+      const row = document.createElement("div");
+      row.className = "msg-row " + sender;
+
+      const time = document.createElement("div");
+      time.className = "time";
+      time.textContent = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+      const bubble = document.createElement("div");
+      bubble.className = "bubble";
+      bubble.textContent = text;
+
+      if (sender === "me") {
+        row.appendChild(time);
+        row.appendChild(bubble);
+      } else {
+        row.appendChild(bubble);
+        row.appendChild(time);
+      }
+
+      messagesEl.appendChild(row);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function generateReply(playerText) {
+      const lower = playerText.trim().toLowerCase();
+      if (!lower) return "你不说话，我就知道你又在想太多。";
+
+      if (lower.includes("想你") || lower.includes("好想你")) {
+        stats.affection += 3;
+        return "我也想你，最近一直都在想你。你别装没事，你一不说我就更担心。";
+      }
+
+      if (lower.includes("忙") || lower.includes("累") || lower.includes("训练") || lower.includes("工作")) {
+        stats.affection += 2;
+        stats.trust += 2;
+        return "那你也别硬扛着，累了就停一下。我在这儿，你别一个人扛。";
+      }
+
+      if (lower.includes("不开心") || lower.includes("难受") || lower.includes("生气")) {
+        stats.affection += 3;
+        stats.trust += 2;
+        return "别憋着，难过的时候你可以和我说。你不说，我会更担心。";
+      }
+
+      if (lower.includes("见面") || lower.includes("出来") || lower.includes("约")) {
+        stats.affection += 3;
+        stats.secrecy += 1;
+        return "我可以，但是不能太明显。你要是想见我，先别让别人看出来。";
+      }
+
+      if (lower.includes("吃饭") || lower.includes("饭") || lower.includes("好吃")) {
+        return "那你就好好吃饭，别一忙起来就不顾自己。吃饱点，才有力气继续。";
+      }
+
+      if (lower.includes("小心") || lower.includes("注意") || lower.includes("提醒")) {
+        stats.trust += 3;
+        return "我知道，我会注意的。你别一直替我操心，我也会尽量控制住。";
+      }
+
+      if (lower.includes("喜欢") || lower.includes("爱") || lower.includes("喜欢你")) {
+        stats.affection += 5;
+        stats.trust += 2;
+        return "你别这样突然说，我这会儿得压住自己，不然我真有点不敢正常了。";
+      }
+
+      if (lower.includes("睡觉") || lower.includes("晚安") || lower.includes("困")) {
+        return "早点睡，别太晚想事情。你睡了，我也能安心一点。";
+      }
+
+      if (lower.includes("在吗") || lower.includes("我在")) {
+        return "在，我一直都在。你要是想说什么，别压着，告诉我就行。";
+      }
+
+      if (lower.includes("谢谢") || lower.includes("感谢")) {
+        return "不需要感谢，我只是怕你一个人扛着。你别总把自己养得太累。";
+      }
+
+      stats.affection += 1;
+      stats.trust += 1;
+      return "我听到了，你这句话我记住了。你不需要什么都自己扛着，我陪你。";
+    }
+
+    function renderEvents() {
+      eventListEl.innerHTML = "";
+      workEvents.forEach((event, index) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "event-btn";
+        btn.textContent = event.title;
+        btn.addEventListener("click", () => {
+          currentEventIndex = index;
+          triggerEvent(index);
+        });
+        eventListEl.appendChild(btn);
+      });
+    }
+
+    function triggerEvent(index) {
+      const event = workEvents[index];
+      workTitleEl.textContent = event.title;
+      workMetaEl.textContent = event.meta;
+      storyNoteEl.textContent = event.note;
+
+      if (event.title.includes("训练") || event.title.includes("排练")) {
+        stats.risk += 4;
+      } else {
+        stats.risk += 2;
+      }
+
+      stats.teamAwareness += 4;
+      if (stats.risk > 100) stats.risk = 100;
+      if (stats.teamAwareness > 100) stats.teamAwareness = 100;
+
+      updateStats();
+    }
+
+    function sendMessage() {
+      const value = msgInputEl.value.trim();
+      if (!value) return;
+
+      addMessage("me", value);
+      msgInputEl.value = "";
+
+      stats.risk += 1;
+      stats.teamAwareness += 2;
+      if (stats.risk > 100) stats.risk = 100;
+      if (stats.teamAwareness > 100) stats.teamAwareness = 100;
+
+      const reply = generateReply(value);
+      setTimeout(() => {
+        addMessage("other", reply);
+      }, 450);
+
+      updateStats();
+    }
+
+    playerInputEl.addEventListener("input", () => {
+      applyIdentity();
+    });
+
+    sendBtn.addEventListener("click", sendMessage);
+    msgInputEl.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") sendMessage();
+    });
+
+    function init() {
+      buildIdentityList();
+      applyIdentity();
+      updateStats();
+      renderEvents();
+      triggerEvent(0);
+
+      addMessage("other", "好想你。");
+      setTimeout(() => {
+        addMessage("other", "你今天怎么还没回我。");
+      }, 500);
+    }
+
+    init();
+  </script>
+</body>
+</html>
