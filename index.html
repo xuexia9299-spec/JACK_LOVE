@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>捡手机模型</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #0f172a;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    .scene {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(125, 211, 252, 0.35), transparent 25%),
+        radial-gradient(circle at 80% 25%, rgba(167, 139, 250, 0.25), transparent 30%),
+        linear-gradient(135deg, #0f172a, #111827 40%, #030712);
+    }
+
+    .phone {
+      position: relative;
+      width: 390px;
+      height: 820px;
+      border-radius: 38px;
+      padding: 14px 12px 12px;
+      background: rgba(15, 23, 42, 0.78);
+      border: 2px solid rgba(255,255,255,0.18);
+      box-shadow:
+        0 0 0 8px rgba(148, 163, 184, 0.15),
+        0 30px 80px rgba(0,0,0,0.55);
+      transform: translateY(120px) scale(0.9);
+      transition: transform 0.8s cubic-bezier(.22,1,.36,1), box-shadow 0.8s ease;
+      overflow: hidden;
+    }
+
+    .phone.active {
+      transform: translateY(0) scale(1);
+      box-shadow:
+        0 0 0 8px rgba(148, 163, 184, 0.2),
+        0 40px 100px rgba(0,0,0,0.6);
+    }
+
+    .screen {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      border-radius: 30px;
+      overflow: hidden;
+      background: linear-gradient(135deg, #38bdf8, #2563eb 40%, #7c3aed 100%);
+    }
+
+    .wallpaper {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(135deg, rgba(14,165,233,0.7), rgba(59,130,246,0.3)),
+        linear-gradient(160deg, rgba(59,130,246,0.6), rgba(168,85,247,0.5)),
+        radial-gradient(circle at 30% 30%, rgba(255,255,255,0.25), transparent 25%);
+    }
+
+    .status-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 58px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 24px 0 24px;
+      color: white;
+      font-size: 14px;
+      font-weight: 600;
+      z-index: 2;
+    }
+
+    .battery {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      opacity: 0.9;
+    }
+
+    .battery-box {
+      width: 22px;
+      height: 12px;
+      border-radius: 4px;
+      border: 1.5px solid rgba(255,255,255,0.9);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .battery-box::after {
+      content: "";
+      position: absolute;
+      right: -5px;
+      top: 3px;
+      width: 3px;
+      height: 6px;
+      border-radius: 2px;
+      background: rgba(255,255,255,0.8);
+    }
+
+    .battery-fill {
+      position: absolute;
+      inset: 1px 1px 1px 1px;
+      background: white;
+      border-radius: 2px;
+      width: 90%;
+    }
+
+    .main-screen {
+      position: absolute;
+      inset: 0;
+      padding-top: 68px;
+      padding-bottom: 120px;
+      z-index: 1;
+    }
+
+    .page {
+      position: absolute;
+      inset: 0;
+      padding: 20px 18px 0;
+      display: none;
+      animation: fadeIn 0.5s ease;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateX(10px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    .apps-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px 10px;
+      margin-top: 12px;
+      width: 100%;
+    }
+
+    .app {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      user-select: none;
+      color: white;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.25);
+    }
+
+    .icon {
+      width: 58px;
+      height: 58px;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.18);
+      border: 1px solid rgba(255,255,255,0.18);
+    }
+
+    .app-name {
+      font-size: 11px;
+      text-align: center;
+      line-height: 1.2;
+      width: 60px;
+      color: rgba(255,255,255,0.95);
+    }
+
+    .dock {
+      position: absolute;
+      left: 14px;
+      right: 14px;
+      bottom: 14px;
+      height: 86px;
+      background: rgba(15, 23, 42, 0.25);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      z-index: 10;
+      padding: 10px 8px;
+    }
+
+    .dock .app {
+      gap: 6px;
+    }
+
+    .dock .icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 16px;
+      font-size: 24px;
+    }
+
+    .dock .app-name {
+      font-size: 9px;
+      width: 46px;
+    }
+
+    .page-indicator {
+      position: absolute;
+      left: 50%;
+      bottom: 105px;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 8px;
+      z-index: 11;
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.35);
+    }
+
+    .dot.active {
+      background: rgba(255,255,255,0.95);
+      width: 18px;
+      border-radius: 9px;
+    }
+
+    .app-detail {
+      position: absolute;
+      inset: 0;
+      background: rgba(7, 12, 20, 0.35);
+      backdrop-filter: blur(4px);
+      display: none;
+      z-index: 20;
+    }
+
+    .app-detail.active {
+      display: block;
+    }
+
+    .sheet {
+      position: absolute;
+      left: 8px;
+      right: 8px;
+      bottom: 8px;
+      top: 140px;
+      background: rgba(3, 7, 18, 0.78);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 30px 30px 18px 18px;
+      padding: 20px 18px;
+      color: white;
+      box-shadow: 0 -10px 30px rgba(0,0,0,0.2);
+    }
+
+    .sheet-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+
+    .sheet-title {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .close-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      background: rgba(255,255,255,0.04);
+    }
+
+    .card {
+      background: rgba(255,255,255,0.08);
+      border-radius: 20px;
+      padding: 16px;
+      margin-bottom: 14px;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .card h3 {
+      margin: 0 0 8px 0;
+      font-size: 14px;
+      color: rgba(255,255,255,0.8);
+    }
+
+    .card p {
+      margin: 0;
+      font-size: 15px;
+      line-height: 1.5;
+      color: rgba(255,255,255,0.95);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      background: rgba(34,197,94,0.2);
+      border: 1px solid rgba(34,197,94,0.5);
+      border-radius: 999px;
+      color: #bbf7d0;
+      font-size: 12px;
+      margin-bottom: 10px;
+    }
+
+    .floating-btn {
+      position: absolute;
+      left: 50%;
+      bottom: 60px;
+      transform: translateX(-50%);
+      z-index: 30;
+      border: none;
+      border-radius: 999px;
+      padding: 12px 18px;
+      font-size: 14px;
+      font-weight: 700;
+      color: #0f172a;
+      background: linear-gradient(135deg, #f8fafc, #dbeafe);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .floating-btn:hover {
+      transform: translateX(-50%) scale(1.04);
+      box-shadow: 0 14px 26px rgba(0,0,0,0.26);
+    }
+
+    @media (max-width: 500px) {
+      .phone {
+        transform: scale(0.82);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="scene">
+    <div class="phone" id="phone">
+      <div class="screen">
+        <div class="wallpaper"></div>
+
+        <div class="status-bar">
+          <span>9:41</span>
+          <div class="battery">
+            <span>📶</span>
+            <span>📡</span>
+            <div class="battery-box">
+              <div class="battery-fill"></div>
+            </div>
+            <span>100%</span>
+          </div>
+        </div>
+
+        <div class="main-screen">
+          <div class="page active" data-page="0">
+            <div class="apps-grid">
+              <div class="app" data-name="微信">
+                <div class="icon" style="background: linear-gradient(135deg,#3ddc84,#16a34a)">💬</div>
+                <div class="app-name">微信</div>
+              </div>
+
+              <div class="app" data-name="支付宝">
+                <div class="icon" style="background: linear-gradient(135deg,#60a5fa,#2563eb)">🅿️</div>
+                <div class="app-name">支付宝</div>
+              </div>
+
+              <div class="app" data-name="淘宝">
+                <div class="icon" style="background: linear-gradient(135deg,#fb923c,#ea580c)">🛍️</div>
+                <div class="app-name">淘宝</div>
+              </div>
+
+              <div class="app" data-name="京东">
+                <div class="icon" style="background: linear-gradient(135deg,#fca5a5,#ef4444)">📦</div>
+                <div class="app-name">京东</div>
+              </div>
+
+              <div class="app" data-name="抖音">
+                <div class="icon" style="background: linear-gradient(135deg,#f9a8d4,#ec4899)">🎵</div>
+                <div class="app-name">抖音</div>
+              </div>
+
+              <div class="app" data-name="快手">
+                <div class="icon" style="background: linear-gradient(135deg,#fcd34d,#f59e0b)">⚡</div>
+                <div class="app-name">快手</div>
+              </div>
+
+              <div class="app" data-name="小红书">
+                <div class="icon" style="background: linear-gradient(135deg,#c4b5fd,#8b5cf6)">📖</div>
+                <div class="app-name">小红书</div>
+              </div>
+
+              <div class="app" data-name="QQ">
+                <div class="icon" style="background: linear-gradient(135deg,#93c5fd,#3b82f6)">💭</div>
+                <div class="app-name">QQ</div>
+              </div>
+
+              <div class="app" data-name="滴滴">
+                <div class="icon" style="background: linear-gradient(135deg,#67e8f9,#06b6d4)">🚕</div>
+                <div class="app-name">滴滴</div>
+              </div>
+
+              <div class="app" data-name="美团">
+                <div class="icon" style="background: linear-gradient(135deg,#fdba74,#f97316)">🍜</div>
+                <div class="app-name">美团</div>
+              </div>
+
+              <div class="app" data-name="高德地图">
+                <div class="icon" style="background: linear-gradient(135deg,#86efac,#22c55e)">🧭</div>
+                <div class="app-name">高德地图</div>
+              </div>
+
+              <div class="app" data-name="网易云">
+                <div class="icon" style="background: linear-gradient(135deg,#fca5a5,#dc2626)">🎧</div>
+                <div class="app-name">网易云</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="page" data-page="1">
+            <div class="apps-grid">
+              <div class="app" data-name="B站">
+                <div class="icon" style="background: linear-gradient(135deg,#a78bfa,#7c3aed)">📺</div>
+                <div class="app-name">B站</div>
+              </div>
+
+              <div class="app" data-name="爱奇艺">
+                <div class="icon" style="background: linear-gradient(135deg,#93c5fd,#2563eb)">🎬</div>
+                <div class="app-name">爱奇艺</div>
+              </div>
+
+              <div class="app" data-name="银行">
+                <div class="icon" style="background: linear-gradient(135deg,#67e8f9,#0f766e)">💳</div>
+                <div class="app-name">银行</div>
+              </div>
+
+              <div class="app" data-name="手机">
+                <div class="icon" style="background: linear-gradient(135deg,#cbd5e1,#64748b)">📱</div>
+                <div class="app-name">手机</div>
+              </div>
+
+              <div class="app" data-name="设置">
+                <div class="icon" style="background: linear-gradient(135deg,#d4d4d8,#52525b)">⚙️</div>
+                <div class="app-name">设置</div>
+              </div>
+
+              <div class="app" data-name="相机">
+                <div class="icon" style="background: linear-gradient(135deg,#f8fafc,#94a3b8)">📸</div>
+                <div class="app-name">相机</div>
+              </div>
+
+              <div class="app" data-name="备忘录">
+                <div class="icon" style="background: linear-gradient(135deg,#fef3c7,#f59e0b)">📝</div>
+                <div class="app-name">备忘录</div>
+              </div>
+
+              <div class="app" data-name="App Store">
+                <div class="icon" style="background: linear-gradient(135deg,#fca5a5,#ef4444)">🛒</div>
+                <div class="app-name">App Store</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="page-indicator">
+          <span class="dot active"></span>
+          <span class="dot"></span>
+        </div>
+
+        <div class="dock">
+          <div class="app" data-name="电话">
+            <div class="icon" style="background: linear-gradient(135deg,#4ade80,#16a34a)">📞</div>
+            <div class="app-name">电话</div>
+          </div>
+
+          <div class="app" data-name="短信">
+            <div class="icon" style="background: linear-gradient(135deg,#60a5fa,#2563eb)">💬</div>
+            <div class="app-name">短信</div>
+          </div>
+
+          <div class="app" data-name="相机">
+            <div class="icon" style="background: linear-gradient(135deg,#e2e8f0,#94a3b8)">📸</div>
+            <div class="app-name">相机</div>
+          </div>
+
+          <div class="app" data-name="App Store">
+            <div class="icon" style="background: linear-gradient(135deg,#fdba74,#f97316)">🛒</div>
+            <div class="app-name">App Store</div>
+          </div>
+        </div>
+      </div>
+
+      <button class="floating-btn" id="pickupBtn">捡起手机</button>
+
+      <div class="app-detail" id="detailPanel">
+        <div class="sheet">
+          <div class="sheet-header">
+            <div class="sheet-title" id="detailTitle">微信</div>
+            <div class="close-btn" id="closeBtn">✕</div>
+          </div>
+
+          <div class="badge">已打开</div>
+
+          <div class="card">
+            <h3>状态</h3>
+            <p id="detailText">消息列表正常，最近收到一条未读消息。</p>
+          </div>
+
+          <div class="card">
+            <h3>说明</h3>
+            <p>这是一个 iPhone 风格模拟界面，可用于展示常用中文 App 和手机首页效果。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const phone = document.getElementById('phone');
+    const pickupBtn = document.getElementById('pickupBtn');
+    const detailPanel = document.getElementById('detailPanel');
+    const detailTitle = document.getElementById('detailTitle');
+    const detailText = document.getElementById('detailText');
+    const closeBtn = document.getElementById('closeBtn');
+    const pages = [...document.querySelectorAll('.page')];
+    const dots = [...document.querySelectorAll('.dot')];
+
+    let pageIndex = 0;
+
+    pickupBtn.addEventListener('click', () => {
+      phone.classList.toggle('active');
+      pickupBtn.textContent = phone.classList.contains('active') ? '已拿起' : '捡起手机';
+    });
+
+    document.querySelectorAll('.app').forEach(app => {
+      app.addEventListener('click', () => {
+        const name = app.dataset.name || '应用';
+        detailTitle.textContent = name;
+        detailText.textContent = `${name} 已打开，当前处于手机应用模拟界面。你可以继续扩展为聊天页、支付页、商品页等。`;
+        detailPanel.classList.add('active');
+      });
+    });
+
+    closeBtn.addEventListener('click', () => {
+      detailPanel.classList.remove('active');
+    });
+
+    function switchPage(nextIndex) {
+      pageIndex = (nextIndex + pages.length) % pages.length;
+      pages.forEach((page, idx) => {
+        page.classList.toggle('active', idx === pageIndex);
+      });
+      dots.forEach((dot, idx) => {
+        dot.classList.toggle('active', idx === pageIndex);
+      });
+    }
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'ArrowRight') switchPage(pageIndex + 1);
+      if (event.key === 'ArrowLeft') switchPage(pageIndex - 1);
+    });
+
+    setInterval(() => {
+      switchPage(pageIndex + 1);
+    }, 4500);
+  </script>
+</body>
+</html>
